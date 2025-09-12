@@ -198,7 +198,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const videoData = insertVideoSchema.parse({
         ...req.body,
-        videoUrl: req.file.path, // This would be processed and stored properly in production
+        videoUrl: `/uploads/${req.file.filename}`, // Make video accessible via URL
         tags: req.body.tags ? req.body.tags.split(',').map((tag: string) => tag.trim()) : [],
       });
 
