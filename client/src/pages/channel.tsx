@@ -32,11 +32,13 @@ export default function Channel() {
 
   const { data: channel, isLoading: channelLoading, error } = useQuery<any>({
     queryKey: ["/api/channels", id],
+    queryFn: () => fetch(`/api/channels/${id}`).then(res => res.json()),
     enabled: isAuthenticated && !!id,
   });
 
   const { data: isSubscribed } = useQuery<any>({
     queryKey: ["/api/subscriptions", id, "status"],
+    queryFn: () => fetch(`/api/subscriptions/${id}/status`).then(res => res.json()),
     enabled: isAuthenticated && !!id,
   });
 

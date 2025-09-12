@@ -62,6 +62,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Featured channels endpoint
+  app.get('/api/channels/featured', async (req, res) => {
+    try {
+      // For MVP, return empty array - can be enhanced later with actual featured logic
+      res.json([]);
+    } catch (error) {
+      console.error("Error fetching featured channels:", error);
+      res.status(500).json({ message: "Failed to fetch featured channels" });
+    }
+  });
+
   app.get('/api/channels/:id', async (req, res) => {
     try {
       const channel = await storage.getChannel(req.params.id);

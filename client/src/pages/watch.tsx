@@ -37,6 +37,7 @@ export default function Watch() {
 
   const { data: channel } = useQuery<any>({
     queryKey: ["/api/channels", video?.channelId],
+    queryFn: () => fetch(`/api/channels/${video?.channelId}`).then(res => res.json()),
     enabled: !!video?.channelId,
   });
 
@@ -160,7 +161,7 @@ export default function Watch() {
                   </div>
                   
                   <div className="text-sm text-muted-foreground" data-testid="text-video-stats">
-                    {video.viewCount?.toLocaleNumber() || 0} views • {new Date(video.createdAt!).toLocaleDateString()}
+                    {video.viewCount?.toLocaleString() || 0} views • {new Date(video.createdAt!).toLocaleDateString()}
                   </div>
                   
                   {video.description && (

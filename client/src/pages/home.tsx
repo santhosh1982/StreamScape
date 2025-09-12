@@ -29,8 +29,9 @@ export default function Home() {
     }
   }, [isAuthenticated, isLoading, toast]);
 
-  const { data: featuredChannels, isLoading: channelsLoading } = useQuery({
+  const { data: featuredChannels, isLoading: channelsLoading } = useQuery<any[]>({
     queryKey: ["/api/channels", "featured"],
+    queryFn: () => fetch('/api/channels/featured').then(res => res.ok ? res.json() : []),
     enabled: isAuthenticated,
   });
 

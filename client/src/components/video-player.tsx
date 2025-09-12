@@ -65,14 +65,25 @@ export default function VideoPlayer({ videoId, videoUrl, title }: VideoPlayerPro
     };
   }, [videoId, trackWatchTime]);
 
-  const togglePlay = () => {
+  const togglePlay = async () => {
     const video = videoRef.current;
     if (!video) return;
 
-    if (isPlaying) {
-      video.pause();
-    } else {
-      video.play();
+    try {
+      if (isPlaying) {
+        video.pause();
+      } else {
+        // Only try to play if video has a valid source
+        if (video.src || videoUrl) {
+          await video.play();
+        } else {
+          console.warn('No video source available for playback');
+        }
+      }
+    } catch (error) {
+      console.warn('Video playback failed:', error);
+      // Reset playing state if play failed
+      setIsPlaying(false);
     }
   };
 
@@ -154,11 +165,10 @@ export default function VideoPlayer({ videoId, videoUrl, title }: VideoPlayerPro
       clearTimeout(controlsTimeoutRef.current);
     }
     
-    if (isPlaying) {
-      controlsTimeoutRef.current = setTimeout(() => {
-        setShowControls(false);
-      }, 1000);
-    }
+    // Hide controls after mouse leaves, regardless of playing state
+    controlsTimeoutRef.current = setTimeout(() => {
+      setShowControls(false);
+    }, 1000);
   };
 
   return (
@@ -172,9 +182,16 @@ export default function VideoPlayer({ videoId, videoUrl, title }: VideoPlayerPro
         className="w-full aspect-video object-contain"
         onClick={togglePlay}
         data-testid="video-element"
+        preload="metadata"
       >
-        <source src={videoUrl} type="video/mp4" />
-        Your browser does not support the video tag.
+        {videoUrl && <source src={videoUrl} type="video/mp4" />}
+        <div className="w-full h-full bg-muted flex items-center justify-center">
+          <div className="text-muted-foreground text-center">
+            <div className="text-4xl mb-2">📹</div>
+            <div>Video Player Ready</div>
+            {!videoUrl && <div className="text-sm mt-1">No video source provided</div>}
+          </div>
+        </div>
       </video>
 
       {/* Video Controls Overlay */}
