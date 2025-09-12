@@ -1,0 +1,209 @@
+# AI Prompt for Video Playing Website with Full Features
+
+Below is a comprehensive prompt you can feed to an AI agent (or use as a specification for building a video-playing website). It covers core features such as quality control, channels, personalization, search, recommendations, playback, and admin/infra considerations. Tailor it to your tech stack (React/Vue, Node/Go backend, databases, etc.).
+
+---
+
+## 1) Project Goal
+
+Create a scalable, user-friendly video streaming platform with:
+- Multi-quality video playback and adaptive bitrate
+- Content channels and live streams
+- Rich metadata, search, and discovery
+- Personalization, recommendations, and watch history
+- User-owned playlists, favorites, and downloads (where permitted)
+- User accounts, authentication, and access control
+- Admin tools for content ingestion, moderation, and analytics
+- Analytics and telemetry for performance and UX
+
+---
+
+## 2) Core Features & Requirements
+
+### A. Playback & Quality
+- **Adaptive Bitrate Streaming**: support HLS/Driend (HLS/DASH) with multiple qualities (e.g., 240p, 360p, 480p, 720p, 1080p, 4K).
+- **Quality Selection**: automatic ABR with manual override; show current bitrate, buffer status, latency.
+- **Offline/Download (where allowed)**: download manager with DRM considerations.
+- **Picture-in-Picture (PiP)**, fullscreen, speed control, subtitles/closed captions, audio tracks.
+- **Caching & CDN**: edge caching, offline caching policies, retry/backoff strategies.
+
+### B. Content Model & Channels
+- **Channels**: creator/brand pages aggregating videos; subscribe, channel analytics, live indicators.
+- **Video Model**: id, title, description, duration, tags, category, thumbnails, featured image, language, rights, license, upload date, channelId, HD/SD/4K URLs.
+- **Live & Premieres**: real-time streaming support, chat, timestamps, Q&A, scheduled releases.
+- **Playlists**: user-created and editor-curated playlists with ordering, visibility, collaboration options.
+
+### C. Discovery & Search
+- **Search**: full-text search with facets (quality, duration, language, channel, category, date).
+- **Recommendations**: personalized for each user based on watch history, likes, follows, and trending content.
+- **Trending/Staff Picks**: editorial curation, seasonal campaigns, regional trends.
+- **Filters & Sorting**: sort by popularity, date added, duration, rating; filter by channel, language, quality.
+
+### D. Personalization & UX
+- **Accounts & Profiles**: sign-up/in (email, OAuth, SSO), avatars, display names.
+- **Watch History**: resume playback, suggestions based on last viewed.
+- **Subscriptions**: follow channels, receive updates.
+- **Likes/Dislikes & Ratings**: facilitate feedback loop for recommendations.
+- **Notifications**: in-app, push, email for new videos, premieres, channel posts.
+- **Accessibility**: captions, transcripts, keyboard navigation, color contrast.
+
+### E. Content Management & Moderation
+- **Ingestion Pipeline**: upload, transcoding to multiple qualities, metadata extraction.
+- **Moderation**: automated checks (violence, hate speech), human review, reporting/report abuse workflow.
+- **Rights & Monetization**: content license, geo-restrictions, ads vs. subscription model, revenue sharing.
+
+### F. Payments & Access Control
+- **Subscriptions**: Free, Premium, and tiered plans.
+- **Pay-Per-View / Rentals**: time-limited access for premium content.
+- **DAC/DRM**: Digital Rights Management for protected content.
+- **Regional Pricing & Tax**: locale-aware pricing, tax calculation.
+
+### G. Analytics & Telemetry
+- **User Analytics**: plays, watch time, retention, drop-off points, completion rate.
+- **Content Analytics**: performance by channel, series, category.
+- **Platform Health**: error rates, buffering events, CDN latency.
+
+### H. Security & Compliance
+- **Authentication**: OAuth2/OpenID Connect, refresh tokens.
+- **Authorization**: roles (user, creator, moderator, admin), channel-level permissions.
+- **Data Privacy**: GDPR/CCPA considerations, data retention policies.
+- **Audit Logs**: sensitive actions tracking.
+
+---
+
+## 3) Data Schema Overview (High-Level)
+
+### A. User
+- userId, email, passwordHash, name, avatarUrl, preferredLanguage, locale, subscriptionStatus, preferences, watchHistory, likedVideoIds, followedChannelIds, deviceTokens (for push)
+
+### B. Channel
+- channelId, name, description, avatarUrl, bannerUrl, ownerUserId, tags, createdAt, subscriberCount, totalVideos, liveStreamInfo
+
+### C. Video
+- videoId, channelId, title, description, duration, tags, category, language, thumbnails, videoUrls (map of quality → url), bitrateInfo, codecs, fps, isLive, license, rights, publishDate, viewCount, rating
+
+### D. Playlist
+- playlistId, ownerUserId, title, description, isCollaborative, videoOrder (array of videoIds), createdAt, updatedAt, visibility
+
+### E. View
+- viewId, userId, videoId, timestamp, durationWatched, deviceType, geoLocation
+
+---
+
+## 4) Tech Stack Blueprint (Suggestive)
+
+### Frontend
+- Framework: React with TypeScript or Vue.js
+- Player: HTML5 video with MSE/MediaSource, or a specialized player (Video.js, Shaka Player)
+- State Management: Redux/Context API or Vuex
+- Styling: CSS-in-JS or TailwindCSS
+- Accessibility: aria-labels, subtitles, captions
+
+### Backend
+- Language: Node.js (NestJS) or Go or Python (FastAPI)
+- API Style: REST + GraphQL (optional)
+- Streaming: HLS or DASH packaging service (FFmpeg, Wowza/NGINX-RTMP)
+- Datastore: PostgreSQL for relational data; Redis for caching; MongoDB for flexible metadata (optional)
+- Search: Elasticsearch or OpenSearch
+- Object Storage: AWS S3 / GCS / Azure Blob
+- CDN: CloudFront/Cloudflare/Akamai
+- Authentication: OAuth2/OIDC, JWT
+- Queues: RabbitMQ/Kafka for ingestion/workflows
+- Monitoring: Prometheus + Grafana; Sentry for errors
+
+### DevOps
+- Containerization: Docker, Kubernetes or serverless where suitable
+- CI/CD: GitHub Actions / GitLab CI
+- Infrastructure as Code: Terraform
+- Logging: ELK/EFK stack or cloud-native
+- Security: WAF, API gateway, rate limiting
+
+---
+
+## 5) User Journeys (Scenarios)
+
+- _New User_: browse featured channels, search for a topic, subscribe to a channel, start watching.
+- _Returning User_: personalized recommendations, continue watching, manage playlist.
+- _Creator_: upload video, set metadata, choose monetization, publish to channel.
+- _Admin_: moderate content, manage users, view analytics, configure site-wide settings.
+
+---
+
+## 6) API Endpoints (Rough Sketch)
+
+> Note: This is a high-level guide. OAuth scopes, pagination, error handling, and rate limits should be defined in detail during API design.
+
+- Auth: POST /auth/login, POST /auth/register, POST /auth/refresh
+- Users: GET /users/me, PATCH /users/me, POST /users/me/follow/:channelId
+- Channels: GET /channels, GET /channels/:id, POST /channels (creator), POST /channels/:id/subscribe
+- Videos: GET /videos, GET /videos/:id, GET /videos/:id/stream (quality URLs), POST /videos (ingest)
+- Playlists: GET /playlists, POST /playlists, PATCH /playlists/:id, POST /playlists/:id/videos
+- Search: GET /search?q=..., with filters: language, category, channel, duration, quality
+- Playback: POST /playback/track (for analytics), GET /streams/:videoId/:quality
+- Analytics: GET /admin/analytics/... (permitted roles)
+- Admin: POST /admin/content/remove, PATCH /admin/users/:id/ban, etc.
+
+---
+
+## 7) Accessibility & Localization
+
+- Subtitles in multiple languages, transcripts, adjustable font sizes.
+- Right-to-left and left-to-right language support.
+- Locale-aware formatting for dates, numbers, currency.
+- Keyboard shortcuts: space (play/pause), m (mute), f (fullscreen), arrows (seek/volume).
+
+---
+
+## 8) Performance & Quality Assurance
+
+- Use progressive enhancement: basic video playback works even with limited bandwidth.
+- Implement preloading and smart prefetching for suggested videos.
+- Use synthetic and real-user monitoring to track startup time, buffering, and error rates.
+- Conduct A/B tests for recommendations, UI changes, and monetization features.
+
+---
+
+## 9) Security Considerations
+
+- Secure token storage and refresh lifecycle.
+- Protect against common web vulnerabilities (OWASP Top 10).
+- Enforce content security policy (CSP), HTTPS, and secure cookies.
+- Rate limiting and abuse detection for APIs.
+
+---
+
+## 10) Example Prompt for an AI Product Designer / Engineer
+
+Here is a ready-to-paste prompt you can provide to an AI assistant to generate a detailed implementation plan and UI mockups:
+
+```
+You are a senior full-stack developer and product designer. Build a scalable video streaming platform with channels, live streams, multi-quality playback, search, recommendations, playlists, and admin analytics. Provide:
+1) Architecture diagram (high level) including frontend, backend, databases, storage, and CDNs.
+2) Data models (ERD) for User, Channel, Video, Playlist, View, and Subscription with field types and relationships.
+3) API blueprint: endpoints, methods, request/response schemas, authentication requirements, and pagination.
+4) UI wireframes for:
+   - Home page (featured, trending, channels)
+   - Channel page (about, video list, subscribe)
+   - Video watch page (player controls, quality switcher, captions, watch history)
+   - Search/results page with filters
+   - Player controls bar (keyboard accessibility, shortcuts)
+   - Admin content ingestion dashboard
+5) Playback behavior specs:
+   - ABR logic, buffering thresholds, fallback policies, offline download permissions.
+6) Moderation & rights flow:
+   - Ingest pipeline, automated checks, human review, and takedown process.
+7) Metrics & telemetry plan:
+   - Key KPIs, event taxonomy, dashboards, and alerting.
+8) Accessibility & localization requirements.
+9) A sample MVP sprint plan (6 weeks) with milestones.
+```
+
+---
+
+## 11) Next Steps
+
+- Tell me your preferred tech stack (frontend framework, backend language, storage, and CDN).
+- Do you want a minimal viable product (MVP) first, or go for a full-featured launch?
+- Any specific monetization model (ads, subscriptions, pay-per-view) or target audience (regional focus, language support)?
+
+If you share your constraints (budget, timeline, scale, compliance needs), I can tailor this prompt into a concrete project spec, create detailed UI wireframes, database schemas, and an implementation plan.
