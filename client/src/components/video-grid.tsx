@@ -1,27 +1,48 @@
 import { useQuery } from "@tanstack/react-query";
 import VideoCard from "@/components/video-card";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Button } from "@/components/ui/button";
+import { useState, useEffect } from "react";
 
 interface VideoGridProps {
   channelId?: string;
   categoryId?: string;
   searchQuery?: string;
   limit?: number;
+  trending?: boolean;
+  liked?: boolean;
 }
 
-export default function VideoGrid({ channelId, categoryId, searchQuery, limit = 20 }: VideoGridProps) {
-  const { data: videos, isLoading, error } = useQuery({
-    queryKey: ["/api/videos", { channelId, categoryId, searchQuery, limit }],
+export default function VideoGrid({ channelId, categoryId, searchQuery, limit = 20, trending = false, liked = false }: VideoGridProps) {
+  const [pageToken, setPageToken] = useState<string | undefined>(undefined);
+
+  const { data, isLoading, error } = useQuery({
+    queryKey: ["/api/videos", { channelId, categoryId, searchQuery, limit, trending, liked, pageToken }],
     queryFn: () => {
       const params = new URLSearchParams();
       if (channelId) params.append('channelId', channelId);
       if (categoryId) params.append('categoryId', categoryId);
       if (searchQuery) params.append('search', searchQuery);
       params.append('limit', limit.toString());
+      if (pageToken) params.append('pageToken', pageToken);
       
-      return fetch(`/api/videos?${params}`).then(res => res.json());
+      let url = `/api/videos?${params}`;
+      if (trending) {
+        url = '/api/videos/trending';
+      } else if (liked) {
+        url = '/api/videos/liked';
+      }
+
+      return fetch(url, { cache: 'no-store' }).then(res => res.json());
     },
+    refetchOnWindowFocus: false,
   });
+
+  const { videos, nextPageToken, prevPageToken } = data || {};
+
+  useEffect(() => {
+    console.log("videos", videos);
+  }, [videos]);
 
   if (isLoading) {
     return (
@@ -62,10 +83,16 @@ export default function VideoGrid({ channelId, categoryId, searchQuery, limit = 
   }
 
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6" data-testid="video-grid">
-      {videos.map((video: any) => (
-        <VideoCard key={video.id} video={video} />
-      ))}
+    <div>
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6" data-testid="video-grid">
+        {videos.map((video: any) => (
+          <VideoCard key={video.id} video={video} />
+        ))}
+      </div>
+      <div className="flex justify-center mt-8">
+        <Button onClick={() => setPageToken(prevPageToken)} disabled={!prevPageToken}>Previous</Button>
+        <Button onClick={() => setPageToken(nextPageToken)} className="ml-4" disabled={!nextPageToken}>Next</Button>
+      </div>
     </div>
   );
 }

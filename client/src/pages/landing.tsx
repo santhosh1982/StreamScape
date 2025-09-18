@@ -1,8 +1,11 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Play, Users, Upload, Star } from "lucide-react";
+import { useLocation } from "wouter";
 
 export default function Landing() {
+  const [, setLocation] = useLocation();
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background to-primary/10">
       <div className="container mx-auto px-4 py-16">
@@ -21,8 +24,8 @@ export default function Landing() {
           <Button 
             size="lg" 
             className="text-lg px-8 py-6"
-            onClick={() => window.location.href = "/api/login"}
             data-testid="button-login"
+            onClick={() => setLocation("/home")}
           >
             Get Started
           </Button>
@@ -83,8 +86,8 @@ export default function Landing() {
                 <div className="flex gap-4">
                   <Button 
                     size="lg"
-                    onClick={() => window.location.href = "/api/login"}
                     data-testid="button-login-hero"
+                    onClick={() => setLocation("/home")}
                   >
                     <Play className="w-4 h-4 mr-2" />
                     Start Watching
@@ -92,8 +95,8 @@ export default function Landing() {
                   <Button 
                     variant="outline" 
                     size="lg"
-                    onClick={() => window.location.href = "/api/login"}
                     data-testid="button-create-hero"
+                    onClick={() => setLocation("/home")}
                   >
                     <Upload className="w-4 h-4 mr-2" />
                     Start Creating

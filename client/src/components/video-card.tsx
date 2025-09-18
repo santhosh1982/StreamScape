@@ -16,6 +16,7 @@ interface VideoCardProps {
       avatarUrl?: string;
     };
     processingStatus?: string;
+    youtubeVideoId?: string;
   };
 }
 
@@ -43,8 +44,10 @@ export default function VideoCard({ video }: VideoCardProps) {
     return "1080p";
   };
 
+  const href = video.youtubeVideoId ? `/watch/${video.youtubeVideoId}` : `/watch/${video.id}`;
+
   return (
-    <Link href={`/watch/${video.id}`}>
+    <Link href={href}>
       <div className="group cursor-pointer" data-testid={`video-card-${video.id}`}>
         <div className="relative aspect-video bg-muted rounded-lg overflow-hidden mb-3">
           {video.thumbnailUrl ? (
@@ -103,7 +106,7 @@ export default function VideoCard({ video }: VideoCardProps) {
               </p>
             )}
             <p className="text-sm text-muted-foreground" data-testid="text-video-stats">
-              {video.viewCount?.toLocaleString() || 0} views • {formatDistance(new Date(video.createdAt), new Date(), { addSuffix: true })}
+              {video.viewCount?.toLocaleString() || 0} views • {video.createdAt && formatDistance(new Date(video.createdAt), new Date(), { addSuffix: true })}
             </p>
           </div>
         </div>

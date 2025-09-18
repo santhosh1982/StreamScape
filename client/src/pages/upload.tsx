@@ -1,8 +1,5 @@
-import { useState } from "react";
-import { useAuth } from "@/hooks/useAuth";
+import { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
-import { useEffect } from "react";
-import { isUnauthorizedError } from "@/lib/authUtils";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import Sidebar from "@/components/sidebar";
@@ -18,7 +15,6 @@ import { CloudUpload, X } from "lucide-react";
 
 export default function Upload() {
   const { toast } = useToast();
-  const { isAuthenticated, isLoading, user } = useAuth();
   const queryClient = useQueryClient();
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [formData, setFormData] = useState({
@@ -31,30 +27,17 @@ export default function Upload() {
     qualities: ["1080p", "720p", "480p"]
   });
 
-  useEffect(() => {
-    if (!isLoading && !isAuthenticated) {
-      toast({
-        title: "Unauthorized",
-        description: "You are logged out. Logging in again...",
-        variant: "destructive",
-      });
-      setTimeout(() => {
-        window.location.href = "/api/login";
-      }, 500);
-      return;
-    }
-  }, [isAuthenticated, isLoading, toast]);
-
   const { data: categories } = useQuery<any[]>({
     queryKey: ["/api/categories"],
-    enabled: isAuthenticated,
   });
 
-  const { data: userChannels } = useQuery<any[]>({
+  const { data: channels } = useQuery<any[]>({
     queryKey: ["/api/channels"],
-    queryFn: () => fetch(`/api/channels?owner=${(user as any)?.id}`).then(res => res.json()),
-    enabled: isAuthenticated && !!(user as any)?.id,
   });
+
+  useEffect(() => {
+    console.log("channels", channels);
+  }, [channels]);
 
   const uploadMutation = useMutation({
     mutationFn: async () => {
@@ -90,17 +73,6 @@ export default function Upload() {
       });
     },
     onError: (error) => {
-      if (isUnauthorizedError(error as Error)) {
-        toast({
-          title: "Unauthorized",
-          description: "You are logged out. Logging in again...",
-          variant: "destructive",
-        });
-        setTimeout(() => {
-          window.location.href = "/api/login";
-        }, 500);
-        return;
-      }
       toast({
         title: "Error",
         description: "Failed to upload video. Please try again.",
@@ -173,24 +145,18 @@ export default function Upload() {
       });
       return;
     }
+
+    if (!formData.categoryId) {
+      toast({
+        title: "No Category Selected",
+        description: "Please select a category for your video.",
+        variant: "destructive",
+      });
+      return;
+    }
     
     uploadMutation.mutate();
   };
-
-  if (isLoading) {
-    return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
-          <p className="text-muted-foreground">Loading...</p>
-        </div>
-      </div>
-    );
-  }
-
-  if (!isAuthenticated) {
-    return null;
-  }
 
   return (
     <div className="min-h-screen flex bg-background text-foreground">
@@ -287,7 +253,7 @@ export default function Upload() {
                           <SelectValue placeholder="Select channel" />
                         </SelectTrigger>
                         <SelectContent>
-                          {userChannels?.map((channel: any) => (
+                          {channels?.map((channel: any) => (
                             <SelectItem key={channel.id} value={channel.id}>
                               {channel.name}
                             </SelectItem>

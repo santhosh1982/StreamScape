@@ -3,7 +3,6 @@ import { Card, CardContent } from "@/components/ui/card";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
-import { isUnauthorizedError } from "@/lib/authUtils";
 
 interface ChannelCardProps {
   name: string;
@@ -11,8 +10,6 @@ interface ChannelCardProps {
   description: string;
   avatar: string;
   avatarBg?: string;
-  channelId?: string;
-  isSubscribed?: boolean;
 }
 
 export default function ChannelCard({ 
@@ -21,41 +18,22 @@ export default function ChannelCard({
   description, 
   avatar, 
   avatarBg = "bg-primary",
-  channelId,
-  isSubscribed = false
 }: ChannelCardProps) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
   const subscribeMutation = useMutation({
     mutationFn: async () => {
-      if (!channelId) throw new Error("Channel ID required");
-      
-      if (isSubscribed) {
-        return await apiRequest("DELETE", `/api/subscriptions/${channelId}`);
-      } else {
-        return await apiRequest("POST", "/api/subscriptions", { channelId });
-      }
+      // Not implemented
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/subscriptions"] });
       toast({
         title: "Success",
-        description: isSubscribed ? "Unsubscribed successfully" : "Subscribed successfully",
+        description: "Subscribed successfully",
       });
     },
     onError: (error) => {
-      if (isUnauthorizedError(error as Error)) {
-        toast({
-          title: "Unauthorized",
-          description: "You are logged out. Logging in again...",
-          variant: "destructive",
-        });
-        setTimeout(() => {
-          window.location.href = "/api/login";
-        }, 500);
-        return;
-      }
       toast({
         title: "Error",
         description: "Failed to update subscription. Please try again.",
@@ -83,16 +61,13 @@ export default function ChannelCard({
         </p>
         <Button 
           className="w-full"
-          variant={isSubscribed ? "secondary" : "default"}
           onClick={() => subscribeMutation.mutate()}
           disabled={subscribeMutation.isPending}
           data-testid="button-subscribe-channel"
         >
           {subscribeMutation.isPending 
             ? "Loading..." 
-            : isSubscribed 
-              ? "Subscribed" 
-              : "Subscribe"
+            : "Subscribe"
           }
         </Button>
       </CardContent>

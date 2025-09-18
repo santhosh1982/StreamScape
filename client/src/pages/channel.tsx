@@ -1,9 +1,5 @@
 import { useParams } from "wouter";
 import { useQuery } from "@tanstack/react-query";
-import { useAuth } from "@/hooks/useAuth";
-import { useToast } from "@/hooks/use-toast";
-import { useEffect } from "react";
-import { isUnauthorizedError } from "@/lib/authUtils";
 import Sidebar from "@/components/sidebar";
 import Header from "@/components/header";
 import VideoGrid from "@/components/video-grid";
@@ -13,36 +9,14 @@ import { Badge } from "@/components/ui/badge";
 
 export default function Channel() {
   const { id } = useParams<{ id: string }>();
-  const { toast } = useToast();
-  const { isAuthenticated, isLoading } = useAuth();
-
-  useEffect(() => {
-    if (!isLoading && !isAuthenticated) {
-      toast({
-        title: "Unauthorized",
-        description: "You are logged out. Logging in again...",
-        variant: "destructive",
-      });
-      setTimeout(() => {
-        window.location.href = "/api/login";
-      }, 500);
-      return;
-    }
-  }, [isAuthenticated, isLoading, toast]);
 
   const { data: channel, isLoading: channelLoading, error } = useQuery<any>({
     queryKey: ["/api/channels", id],
     queryFn: () => fetch(`/api/channels/${id}`).then(res => res.json()),
-    enabled: isAuthenticated && !!id,
+    enabled: !!id,
   });
 
-  const { data: isSubscribed } = useQuery<any>({
-    queryKey: ["/api/subscriptions", id, "status"],
-    queryFn: () => fetch(`/api/subscriptions/${id}/status`).then(res => res.json()),
-    enabled: isAuthenticated && !!id,
-  });
-
-  if (isLoading || channelLoading) {
+  if (channelLoading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center">
@@ -53,16 +27,8 @@ export default function Channel() {
     );
   }
 
-  if (error && isUnauthorizedError(error as Error)) {
-    toast({
-      title: "Unauthorized",
-      description: "You are logged out. Logging in again...",
-      variant: "destructive",
-    });
-    setTimeout(() => {
-      window.location.href = "/api/login";
-    }, 500);
-    return null;
+  if (error) {
+    return <div>Error loading channel</div>
   }
 
   if (!channel) {
@@ -131,10 +97,9 @@ export default function Channel() {
                   </div>
                   
                   <Button 
-                    variant={isSubscribed?.isSubscribed ? "secondary" : "default"}
                     data-testid="button-subscribe-channel"
                   >
-                    {isSubscribed?.isSubscribed ? "Subscribed" : "Subscribe"}
+                    Subscribe
                   </Button>
                 </div>
               </div>
